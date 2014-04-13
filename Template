@@ -1,0 +1,112 @@
+#include<stdio.h>
+#include<string.h>
+#include<vector>
+const int N=500005;
+using namespace std;
+FILE *f,*g;
+
+int n; int Max;
+
+char s[N];
+
+struct forlist{
+
+    int prev, next;
+    int val;
+}list[N];
+
+int nrl; int poz[N];
+
+vector<int> elim[N];
+
+int Z[N];
+
+void read(void){
+
+    f=fopen("template.in","r");
+    g=fopen("template.out","w");
+
+    fscanf(f,"%s",s);
+    n=strlen(s);
+
+    int i;
+    for(i=n;i>=1;i--) s[i]=s[i-1];
+}
+
+void initZ (void){
+
+    Z[1]=0;
+    int best=1, i, curr;
+
+    for(i=2;i<=n;i++){
+
+        if (best+Z[best]-1 < i){
+            curr=0;
+            while (curr <= n-i && s[curr+i]==s[curr+1]) curr++;
+            Z[i]=curr;
+            best=i;
+        }
+
+        else{
+
+            if (Z[i-best+1] < Z[best]+best-i) Z[i]=Z[i-best+1];
+            else {
+                curr=Z[best]+best-i;
+                while (curr <= n-i && s[curr+i] == s[curr+1]) curr++;
+                Z[i]=curr;
+                best=i;
+            }
+        }
+    }
+
+    Z[1]=n+1;
+}
+
+void initlist(void){
+
+    int i;
+    for(i=1;i<=n;i++) {
+        if (Z[i]) {
+        list[++nrl].val=i;
+        list[nrl].prev=nrl-1;
+        list[nrl].next=nrl+1;
+        poz[i]=nrl;
+        
+        }
+    elim[Z[i]].push_back(i);
+    }
+    list[nrl+1].val=n+1;
+    for(i=1;i<=nrl;i++)
+    if (Max < list[i+1].val - list[i].val) Max=list[i+1].val - list[i].val;
+}
+
+void eliminate(int k){
+
+    vector<int>::iterator it=elim[k].begin(); int l;
+
+    while( it != elim[k].end() ){
+        
+        l=poz[*it];
+        list[list[l].prev].next=list[l].next;
+        list[list[l].next].prev=list[l].prev;
+        if (Max < list[list[l].next].val - list[list[l].prev].val) Max = list[ list[l].next ].val - list[ list[l].prev ].val;
+        it++;
+    }
+}
+
+void solve(void){
+
+    int i=1;
+    while (Max > i) eliminate(i++);
+    fprintf(g,"%d",i);
+}
+
+int main(void){
+
+    read();
+
+    initZ();
+    initlist();
+
+    solve();
+}
